@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PURA GRAVITÀ — La Geometria della Discesa Libera</title>
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', 'SF Pro Display', -apple-system, sans-serif;
+  background: #0a1628;
+  color: #e0e8f0;
+  overflow-x: hidden;
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* ═══════════════════════════════════════════════
+   GRID BACKGROUND (HUD style)
+   ═══════════════════════════════════════════════ */
+.hud-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ═══════════════════════════════════════════════
+   SCAN LINES
+   ═══════════════════════════════════════════════ */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   NAV
+   ═══════════════════════════════════════════════ */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 2rem;
+  background: rgba(10,22,40,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,255,255,0.15);
+  transform: translateY(-100%);
+  transition: transform 0.4s;
+}
+.nav.visible { transform: translateY(0); }
+.nav-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #00ffff;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.nav-links { display: flex; gap: 0.2rem; }
+.nav-links a {
+  color: #7aa3c7;
+  text-decoration: none;
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-links a:hover, .nav-links a.active {
+  color: #00ffff;
+  border-color: rgba(0,255,255,0.3);
+  background: rgba(0,255,255,0.05);
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION BASE
+   ═══════════════════════════════════════════════ */
+section {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  z-index: 1;
+}
+.section-inner {
+  max-width: 1200px;
+  width: 100%;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+.reveal-delay-4 { transition-delay: 0.6s; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0,255,255,0.3); }
+  50% { box-shadow: 0 0 20px rgba(0,255,255,0.6); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+/* ═══════════════════════════════════════════════
+   SECTION 1: HERO
+   ═══════════════════════════════════════════════ */
+#hero {
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(10,22,40,0.92) 0%, rgba(10,22,40,0.6) 50%, rgba(10,22,40,0.85) 100%),
+    url('https://images.unsplash.com/photo-1565992441121-4367c2967103?w=1600&q=80') center/cover;
+  overflow: hidden;
+}
+.hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  min-height: 80vh;
+}
+.hero-title h1 {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  line-height: 0.95;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.hero-title h1 span { color: #ff3333; }
+.hero-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.6rem);
+  color: #ff4444;
+  font-style: italic;
+  font-weight: 300;
+  margin-bottom: 2rem;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2rem;
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  cursor: pointer;
+  background: transparent;
+  animation: glow 3s infinite;
+}
+.hero-cta:hover {
+  background: rgba(0,255,255,0.1);
+  transform: translateX(5px);
+}
+.hero-visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.hero-hud {
+  position: relative;
+  width: 400px;
+  height: 400px;
+}
+.hud-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0,255,255,0.2);
+}
+.hud-circle-1 { inset: 0; animation: pulse 4s infinite; }
+.hud-circle-2 { inset: 30px; border-color: rgba(255,60,60,0.2); animation: pulse 4s infinite 1s; }
+.hud-circle-3 { inset: 60px; animation: pulse 4s infinite 2s; }
+.hud-data {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #00ffff;
+  letter-spacing: 1px;
+}
+.hud-data-speed { top: 20%; right: -30px; }
+.hud-data-alt { bottom: 30%; right: -40px; }
+.hud-data-gforce { top: 50%; left: -50px; color: #ff4444; }
+.hero-skier-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 5rem;
+  filter: drop-shadow(0 0 20px rgba(0,255,255,0.5));
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 2: ANATOMIA DELLO SPORT
+   ═══════════════════════════════════════════════ */
+#anatomia {
+  background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 100%);
+}
+.anatomy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.anatomy-card {
+  background: rgba(0,255,255,0.03);
+  border: 1px solid rgba(0,255,255,0.1);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s;
+}
+.anatomy-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
+  transform: scaleX(0);
+  transition: transform 0.4s;
+}
+.anatomy-card:hover::before { transform: scaleX(1); }
+.anatomy-card:hover {
+  background: rgba(0,255,255,0.06);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 40px rgba(0,255,255,0.1);
+}
+.anatomy-card .arrow-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+.arrow-up { background: rgba(0,255,255,0.15); color: #00ffff; }
+.arrow-down { background: rgba(255,60,60,0.15); color: #ff3c3c; }
+.arrow-side { background: rgba(255,200,0,0.15); color: #ffc800; }
+.anatomy-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.anatomy-card p {
+  font-size: 0.85rem;
+  color: #8a9bb5;
+  line-height: 1.6;
+}
+.anatomy-card .expand-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+}
+.anatomy-card.expanded .expand-content {
+  max-height: 200px;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0,255,255,0.1);
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 3: PROFILO ALTIMETRICO
+   ═══════════════════════════════════════════════ */
+#altimetria {
+  background: #0a1225;
+}
+.altitude-container {
+  width: 100%;
+  position: relative;
+}
+.altitude-canvas {
+  width: 100%;
+  height: 400px;
+  border: 1px solid rgba(0,255,255,0.15);
+  background: rgba(0,0,0,0.3);
+  cursor: crosshair;
+}
+.altitude-info-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.alt-info-card {
+  background: rgba(0,255,255,0.03);
+  border: 1px solid rgba(0,255,255,0.1);
+  padding: 1.2rem;
+  text-align: center;
+}
+.alt-info-card .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00ffff;
+}
+.alt-info-card .label {
+  font-size: 0.75rem;
+  color: #7a8fa5;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 0.3rem;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 4: AERODINAMICA
+   ═══════════════════════════════════════════════ */
+#aerodinamica {
+  background: linear-gradient(180deg, #0a1225 0%, #0d1f3c 100%);
+}
+.aero-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.aero-visual {
+  position: relative;
+  height: 400px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,255,255,0.1);
+  overflow: hidden;
+}
+.wind-line {
+  position: absolute;
+  height: 2px;
+  border-radius: 1px;
+  opacity: 0;
+}
+.aero-stats { display: flex; flex-direction: column; gap: 1.5rem; }
+.aero-stat {
+  padding: 1.5rem;
+  background: rgba(0,255,255,0.03);
+  border-left: 3px solid #00ffff;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.aero-stat:hover {
+  background: rgba(0,255,255,0.08);
+  transform: translateX(5px);
+}
+.aero-stat h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #00ffff;
+  margin-bottom: 0.5rem;
+}
+.aero-stat .big-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #fff;
+}
+.aero-stat p {
+  font-size: 0.85rem;
+  color: #8a9bb5;
+  margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 5: EQUIPAGGIAMENTO
+   ═══════════════════════════════════════════════ */
+#equipaggiamento {
+  background: #0a1628;
+}
+.equip-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 3rem;
+  align-items: start;
+}
+.equip-model {
+  position: relative;
+  height: 500px;
+  border: 1px solid rgba(0,255,255,0.15);
+  background:
+    linear-gradient(rgba(0,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,255,0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.wireframe-skier {
+  font-size: 12rem;
+  color: #00ffff;
+  filter: drop-shadow(0 0 30px rgba(0,255,255,0.3));
+  animation: float 6s ease-in-out infinite;
+}
+.equip-items { display: flex; flex-direction: column; gap: 1rem; }
+.equip-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  padding: 1.2rem;
+  background: rgba(0,255,255,0.02);
+  border: 1px solid rgba(0,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.3s;
+  align-items: start;
+}
+.equip-item:hover {
+  background: rgba(0,255,255,0.06);
+  border-color: rgba(0,255,255,0.3);
+  transform: translateX(5px);
+}
+.equip-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 4px;
+  animation: pulse 2s infinite;
+}
+.equip-item h4 {
+  font-size: 0.95rem;
+  color: #00ffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.3rem;
+}
+.equip-item p {
+  font-size: 0.8rem;
+  color: #7a8fa5;
+  line-height: 1.5;
+}
+.equip-item .detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s;
+}
+.equip-item.active .detail {
+  max-height: 100px;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0,255,255,0.1);
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 6: ALLENAMENTO
+   ═══════════════════════════════════════════════ */
+#allenamento {
+  background: linear-gradient(180deg, #0a1628 0%, #0d1830 100%);
+}
+.training-ring-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.ring-canvas-wrap {
+  display: flex;
+  justify-content: center;
+}
+.ring-canvas {
+  width: 380px;
+  height: 380px;
+}
+.training-details { display: flex; flex-direction: column; gap: 1rem; }
+.training-cat {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(0,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.training-cat:hover {
+  background: rgba(0,255,255,0.05);
+  transform: translateX(5px);
+}
+.cat-color {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.cat-red { background: rgba(255,60,60,0.2); color: #ff3c3c; }
+.cat-cyan { background: rgba(0,255,255,0.2); color: #00ffff; }
+.cat-white { background: rgba(255,255,255,0.15); color: #fff; }
+.cat-gray { background: rgba(150,150,150,0.15); color: #999; }
+.training-cat h4 { font-size: 0.9rem; color: #fff; }
+.training-cat p { font-size: 0.75rem; color: #7a8fa5; }
+.training-center-text {
+  text-align: center;
+  margin-top: 1rem;
+}
+.training-center-text .big { font-size: 1.8rem; font-weight: 900; color: #00ffff; }
+.training-center-text .sub { font-size: 0.75rem; color: #7a8fa5; }
+.training-quote {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: #7a8fa5;
+  border-top: 1px solid rgba(0,255,255,0.1);
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 7: NUTRIZIONE
+   ═══════════════════════════════════════════════ */
+#nutrizione {
+  background: #0a1628;
+}
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.food-card {
+  position: relative;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,255,255,0.1);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s;
+}
+.food-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0,255,255,0.1);
+}
+.food-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  filter: brightness(0.8);
+  transition: filter 0.3s;
+}
+.food-card:hover .food-img { filter: brightness(1); }
+.food-ring-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 80px;
+  height: 80px;
+}
+.food-info {
+  padding: 1.2rem;
+}
+.food-info h4 {
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 0.3rem;
+}
+.food-info p {
+  font-size: 0.8rem;
+  color: #7a8fa5;
+  line-height: 1.5;
+}
+.food-macros {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+.macro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.macro-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.macro-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #5a7a95;
+}
+.macro-carb { color: #ff3c3c; }
+.macro-prot { color: #00ffff; }
+.macro-fat { color: #ffc800; }
+
+/* ═══════════════════════════════════════════════
+   SECTION 8: TRAIETTORIE
+   ═══════════════════════════════════════════════ */
+#traiettorie {
+  background: linear-gradient(180deg, #0a1628 0%, #0c1a30 100%);
+}
+.trajectory-container {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.trajectory-canvas-wrap {
+  position: relative;
+  border: 1px solid rgba(0,255,255,0.15);
+  background: rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.trajectory-canvas {
+  width: 100%;
+  height: 450px;
+}
+.trajectory-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.traj-item {
+  padding: 1.2rem;
+  border-left: 3px solid;
+  background: rgba(0,0,0,0.2);
+}
+.traj-item h4 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+.traj-item p {
+  font-size: 0.8rem;
+  color: #7a8fa5;
+  line-height: 1.6;
+}
+.traj-cyan { border-color: #00ffff; }
+.traj-cyan h4 { color: #00ffff; }
+.traj-red { border-color: #ff3c3c; }
+.traj-red h4 { color: #ff3c3c; }
+
+/* ═══════════════════════════════════════════════
+   SECTION 9: LAMINE
+   ═══════════════════════════════════════════════ */
+#lamine {
+  background: #0a1628;
+}
+.edge-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.edge-visual {
+  position: relative;
+  height: 350px;
+  border: 1px solid rgba(0,255,255,0.1);
+  background: rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.edge-canvas {
+  width: 100%;
+  height: 100%;
+}
+.edge-details { display: flex; flex-direction: column; gap: 1.2rem; }
+.edge-spec {
+  padding: 1.2rem;
+  background: rgba(0,255,255,0.03);
+  border: 1px solid rgba(0,255,255,0.1);
+  transition: all 0.3s;
+}
+.edge-spec:hover { background: rgba(0,255,255,0.08); }
+.edge-spec h4 {
+  color: #00ffff;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.3rem;
+}
+.edge-spec .angle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+}
+.edge-spec p { font-size: 0.8rem; color: #7a8fa5; margin-top: 0.3rem; }
+.edge-quote {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-style: italic;
+  color: #7a8fa5;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0,255,255,0.1);
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 10: RECORD
+   ═══════════════════════════════════════════════ */
+#record {
+  background:
+    linear-gradient(135deg, rgba(10,18,37,0.95), rgba(10,22,40,0.9)),
+    url('https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=1600&q=80') center/cover;
+}
+.record-content {
+  text-align: center;
+}
+.record-gauge {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 2rem auto;
+}
+.record-gauge canvas {
+  width: 100%;
+  height: 100%;
+}
+.record-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.record-number .speed {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5rem;
+  font-weight: 900;
+  color: #ff3c3c;
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(255,60,60,0.5);
+}
+.record-number .unit {
+  font-size: 1.2rem;
+  color: #ff6666;
+  letter-spacing: 3px;
+}
+.record-details {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-top: 2rem;
+}
+.record-detail {
+  text-align: center;
+}
+.record-detail .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.3rem;
+  color: #00ffff;
+  font-weight: 700;
+}
+.record-detail .lbl {
+  font-size: 0.7rem;
+  color: #5a7a95;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 11: STREIF
+   ═══════════════════════════════════════════════ */
+#streif {
+  background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 100%);
+}
+.streif-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.streif-photo {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0,255,255,0.15);
+}
+.streif-photo img {
+  width: 100%;
+  height: 450px;
+  object-fit: cover;
+  filter: brightness(0.8);
+}
+.streif-photo .photo-frame {
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(0,255,255,0.3);
+  pointer-events: none;
+}
+.streif-info { display: flex; flex-direction: column; gap: 1.5rem; }
+.streif-title-badge {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: glow 3s infinite;
+}
+.streif-telemetry {
+  height: 200px;
+  border: 1px solid rgba(0,255,255,0.1);
+  background: rgba(0,0,0,0.3);
+}
+.streif-facts { display: flex; flex-direction: column; gap: 0.8rem; }
+.streif-fact {
+  display: flex;
+  gap: 1rem;
+  padding: 0.8rem;
+  border-left: 2px solid;
+}
+.streif-fact.cyan { border-color: #00ffff; }
+.streif-fact.red { border-color: #ff3c3c; }
+.streif-fact h5 { font-size: 0.85rem; }
+.streif-fact.cyan h5 { color: #00ffff; }
+.streif-fact.red h5 { color: #ff3c3c; }
+.streif-fact p { font-size: 0.8rem; color: #7a8fa5; }
+
+/* ═══════════════════════════════════════════════
+   SECTION 12: CHIUSURA
+   ═══════════════════════════════════════════════ */
+#chiusura {
+  background:
+    linear-gradient(180deg, rgba(10,22,40,0.3), rgba(255,255,255,0.95) 40%),
+    url('https://images.unsplash.com/photo-1478700485868-5e0e5032b970?w=1600&q=80') center/cover;
+  min-height: 80vh;
+}
+.chiusura-content {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.chiusura-content h2 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 900;
+  color: #111;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+.chiusura-content h2 span {
+  display: block;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  margin-top: 0.5rem;
+}
+.chiusura-author {
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 2rem;
+  letter-spacing: 2px;
+}
+.power-icon {
+  display: inline-flex;
+  width: 50px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #00aabb;
+  border-radius: 50%;
+  color: #00aabb;
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.power-icon:hover {
+  background: #00aabb;
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION HEADERS
+   ═══════════════════════════════════════════════ */
+.section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #00ffff;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.section-heading {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+}
+.section-heading span { color: #00ffff; }
+
+/* ═══════════════════════════════════════════════
+   SCROLL PROGRESS
+   ═══════════════════════════════════════════════ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00ffff, #ff3c3c);
+  z-index: 99999;
+  transition: width 0.1s;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .hero-content, .aero-split, .training-ring-container,
+  .equip-grid, .edge-split, .streif-grid, .trajectory-container {
+    grid-template-columns: 1fr;
+  }
+  .anatomy-grid { grid-template-columns: 1fr; }
+  .food-grid { grid-template-columns: 1fr 1fr; }
+  .altitude-info-cards { grid-template-columns: 1fr; }
+  .hero-hud { width: 280px; height: 280px; }
+  .nav-links { display: none; }
+  section { padding: 4rem 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- HUD Grid Background -->
+<div class="hud-grid"></div>
+<div class="scanlines"></div>
+
+<!-- Navigation -->
+<nav class="nav" id="nav">
+  <div class="nav-brand">⬡ PURA GRAVITÀ</div>
+  <div class="nav-links">
+    <a href="#hero">Home</a>
+    <a href="#anatomia">Anatomia</a>
+    <a href="#altimetria">Tracciato</a>
+    <a href="#aerodinamica">Aero</a>
+    <a href="#equipaggiamento">Equip</a>
+    <a href="#allenamento">Training</a>
+    <a href="#nutrizione">Fuel</a>
+    <a href="#traiettorie">Linea</a>
+    <a href="#record">Record</a>
+    <a href="#streif">Streif</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 1: HERO
+     ═══════════════════════════════════════════ -->
+<section id="hero">
+  <div class="section-inner hero-content">
+    <div class="hero-title">
+      <div class="reveal">
+        <h1>PURA<br><span>GRAVITÀ</span></h1>
+      </div>
+      <p class="hero-subtitle reveal reveal-delay-1">La Geometria Perfetta della Discesa Libera</p>
+      <a href="#anatomia" class="hero-cta reveal reveal-delay-2">[›] INIZIA LA DISCESA</a>
+    </div>
+    <div class="hero-visual reveal reveal-delay-2">
+      <div class="hero-hud">
+        <div class="hud-circle hud-circle-1"></div>
+        <div class="hud-circle hud-circle-2"></div>
+        <div class="hud-circle hud-circle-3"></div>
+        <div class="hud-data hud-data-speed">SPEED: <span id="heroSpeed">0</span> KM/H</div>
+        <div class="hud-data hud-data-alt">ALT: 2850M</div>
+        <div class="hud-data hud-data-gforce">G-FORCE: <span id="heroG">0.0</span>G</div>
+        <div class="hero-skier-icon">⛷</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2: ANATOMIA
+     ═══════════════════════════════════════════ -->
+<section id="anatomia">
+  <div class="section-inner">
+    <div class="section-tag reveal">ANALISI COMPONENTI</div>
+    <h2 class="section-heading reveal reveal-delay-1">ANATOMIA DELLA <span>VELOCITÀ</span></h2>
+    <div class="anatomy-grid">
+      <div class="anatomy-card reveal reveal-delay-1" onclick="toggleCard(this)">
+        <div class="arrow-icon arrow-side">⚡</div>
+        <h3>Velocità Estrema</h3>
+        <p>Oltre 130 km/h in media, con punte che superano i 160 km/h nei tratti più ripidi.</p>
+        <div class="expand-content">
+          <p style="color:#00ffff;font-size:0.8rem;">→ A 150 km/h uno sciatore copre 42 metri al secondo — il tempo di reazione è di soli 0.1 secondi.</p>
+        </div>
+      </div>
+      <div class="anatomy-card reveal reveal-delay-2" onclick="toggleCard(this)">
+        <div class="arrow-icon arrow-up">↗</div>
+        <h3>Componenti Tecniche</h3>
+        <p>Coraggio puro e giudizio istantaneo. Ogni decisione avviene in millisecondi.</p>
+        <div class="expand-content">
+          <p style="color:#00ffff;font-size:0.8rem;">→ Gli atleti memorizzano ogni curva con sessioni di visualizzazione mentale prima della gara.</p>
+        </div>
+      </div>
+      <div class="anatomy-card reveal reveal-delay-3" onclick="toggleCard(this)">
+        <div class="arrow-icon arrow-down">⬇</div>
+        <h3>Rischio e Forza G</h3>
+        <p>Compressione brutale: fino a 3.5G sul corpo nelle curve a velocità più elevate.</p>
+        <div class="expand-content">
+          <p style="color:#ff3c3c;font-size:0.8rem;">→ Paragonabile alle forze subite dai piloti di Formula 1 in frenata.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 3: PROFILO ALTIMETRICO
+     ═══════════════════════════════════════════ -->
+<section id="altimetria">
+  <div class="section-inner">
+    <div class="section-tag reveal">ANALISI TRACCIATO</div>
+    <h2 class="section-heading reveal reveal-delay-1">PROFILO <span>ALTIMETRICO</span></h2>
+    <div class="altitude-container reveal reveal-delay-2">
+      <canvas class="altitude-canvas" id="altitudeCanvas"></canvas>
+      <div class="altitude-info-cards">
+        <div class="alt-info-card">
+          <div class="value">800-1100m</div>
+          <div class="label">Dislivello</div>
+        </div>
+        <div class="alt-info-card">
+          <div class="value">8m min</div>
+          <div class="label">Larghezza Porte</div>
+        </div>
+        <div class="alt-info-card">
+          <div class="value">1 Manche</div>
+          <div class="label">Formato Gara</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 4: AERODINAMICA
+     ═══════════════════════════════════════════ -->
+<section id="aerodinamica">
+  <div class="section-inner">
+    <div class="section-tag reveal">GALLERIA DEL VENTO</div>
+    <h2 class="section-heading reveal reveal-delay-1">DRAG <span>AERODINAMICO</span></h2>
+    <div class="aero-split">
+      <div class="aero-visual reveal reveal-delay-2" id="windTunnel">
+        <canvas id="windCanvas" style="width:100%;height:100%;"></canvas>
+      </div>
+      <div class="aero-stats reveal reveal-delay-3">
+        <div class="aero-stat">
+          <h4>Resistenza Aerodinamica</h4>
+          <div class="big-number">80-90%</div>
+          <p>della resistenza totale è causata dall'attrito con l'aria</p>
+        </div>
+        <div class="aero-stat">
+          <h4>Posizione a Uovo</h4>
+          <div class="big-number">-20%</div>
+          <p>di drag in meno con la postura ottimizzata</p>
+        </div>
+        <div class="aero-stat">
+          <h4>Sezione Frontale</h4>
+          <div class="big-number">0.4 m²</div>
+          <p>area esposta al vento nella posizione ideale</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 5: EQUIPAGGIAMENTO
+     ═══════════════════════════════════════════ -->
+<section id="equipaggiamento">
+  <div class="section-inner">
+    <div class="section-tag reveal">ANALISI TECNICA</div>
+    <h2 class="section-heading reveal reveal-delay-1">EQUIPAGGIAMENTO <span>DA GARA</span></h2>
+    <div class="equip-grid">
+      <div class="equip-model reveal reveal-delay-2">
+        <div class="wireframe-skier">⛷</div>
+      </div>
+      <div class="equip-items reveal reveal-delay-3">
+        <div class="equip-item" onclick="toggleEquip(this)">
+          <div class="equip-dot" style="background:#00ffff;"></div>
+          <div>
+            <h4>Tuta Aerodinamica</h4>
+            <p>Tessuto skintight a tolleranza zero per minimizzare il drag</p>
+            <div class="detail">
+              <p>Ogni millimetro di tessuto è testato in galleria del vento. Le cuciture sono termosaldate per eliminare turbolenze.</p>
+            </div>
+          </div>
+        </div>
+        <div class="equip-item" onclick="toggleEquip(this)">
+          <div class="equip-dot" style="background:#ff3c3c;"></div>
+          <div>
+            <h4>Sicurezza — Airbag</h4>
+            <p>Airbag intelligente obbligatorio con sensori che si attivano in millisecondi</p>
+            <div class="detail">
+              <p>I sensori rilevano accelerazioni anomale e gonfiano l'airbag in 80ms, proteggendo schiena e collo.</p>
+            </div>
+          </div>
+        </div>
+        <div class="equip-item" onclick="toggleEquip(this)">
+          <div class="equip-dot" style="background:#ffc800;"></div>
+          <div>
+            <h4>Sci — 218cm+</h4>
+            <p>Minimo 218cm (uomini). Raggio 50m. Geometria per massima stabilità</p>
+            <div class="detail">
+              <p>Più lunghi = più stabili ad alta velocità. Il raggio ampio permette curve veloci senza perdere velocità.</p>
+            </div>
+          </div>
+        </div>
+        <div class="equip-item" onclick="toggleEquip(this)">
+          <div class="equip-dot" style="background:#00ff88;"></div>
+          <div>
+            <h4>Casco con Mentoniera</h4>
+            <p>Casco aerodinamico integrale con protezione facciale completa</p>
+            <div class="detail">
+              <p>Peso inferiore a 750g con certificazione FIS. La mentoniera riduce il drag del 15%.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 6: ALLENAMENTO
+     ═══════════════════════════════════════════ -->
+<section id="allenamento">
+  <div class="section-inner">
+    <div class="section-tag reveal">MATRICE DI CARICO</div>
+    <h2 class="section-heading reveal reveal-delay-1">CARICO <span>SETTIMANALE</span></h2>
+    <div class="training-ring-container">
+      <div class="ring-canvas-wrap reveal reveal-delay-2">
+        <canvas class="ring-canvas" id="ringCanvas"></canvas>
+      </div>
+      <div class="training-details reveal reveal-delay-3">
+        <div class="training-center-text">
+          <div class="big">10-14 Sessioni</div>
+          <div class="sub">14-21 ore totali a settimana</div>
+        </div>
+        <div class="training-cat" data-cat="forza">
+          <div class="cat-color cat-red">💪</div>
+          <div>
+            <h4>Forza Massimale</h4>
+            <p>Squat, stacchi, leg press — base della potenza esplosiva</p>
+          </div>
+        </div>
+        <div class="training-cat" data-cat="agility">
+          <div class="cat-color cat-cyan">⚡</div>
+          <div>
+            <h4>Agility & Reattività</h4>
+            <p>Pliometria, salti laterali, reazione a stimoli</p>
+          </div>
+        </div>
+        <div class="training-cat" data-cat="resistenza">
+          <div class="cat-color cat-white">🫀</div>
+          <div>
+            <h4>Resistenza Aerobica</h4>
+            <p>Ciclismo, corsa, endurance di base</p>
+          </div>
+        </div>
+        <div class="training-cat" data-cat="core">
+          <div class="cat-color cat-gray">🧘</div>
+          <div>
+            <h4>Core Stability</h4>
+            <p>Plank, balance board, stabilizzazione</p>
+          </div>
+        </div>
+      </div>
+      <p class="training-quote reveal">"Il talento non basta. La velocità si costruisce in palestra."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 7: NUTRIZIONE
+     ═══════════════════════════════════════════ -->
+<section id="nutrizione">
+  <div class="section-inner">
+    <div class="section-tag reveal">FUEL SYSTEM</div>
+    <h2 class="section-heading reveal reveal-delay-1">NUTRIZIONE <span>DA GARA</span></h2>
+    <div class="food-grid">
+      <div class="food-card reveal reveal-delay-1">
+        <img class="food-img" src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80" alt="Omelette">
+        <canvas class="food-ring-overlay" width="80" height="80"></canvas>
+        <div class="food-info">
+          <h4>Omelette Proteica</h4>
+          <p>Proteine pure per forza esplosiva e recupero muscolare</p>
+          <div class="food-macros">
+            <div class="macro"><span class="macro-value macro-carb">77%</span><span class="macro-label">Carb</span></div>
+            <div class="macro"><span class="macro-value macro-prot">40%</span><span class="macro-label">Prot</span></div>
+            <div class="macro"><span class="macro-value macro-fat">21%</span><span class="macro-label">Fat</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="food-card reveal reveal-delay-2">
+        <img class="food-img" src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=80" alt="Pancake">
+        <canvas class="food-ring-overlay" width="80" height="80"></canvas>
+        <div class="food-info">
+          <h4>Pancake & Frutti di Bosco</h4>
+          <p>Carboidrati a lento rilascio per energia sostenuta</p>
+          <div class="food-macros">
+            <div class="macro"><span class="macro-value macro-carb">30%</span><span class="macro-label">Carb</span></div>
+            <div class="macro"><span class="macro-value macro-prot">58%</span><span class="macro-label">Prot</span></div>
+            <div class="macro"><span class="macro-value macro-fat">12%</span><span class="macro-label">Fat</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="food-card reveal reveal-delay-3">
+        <img class="food-img" src="https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=600&q=80" alt="Porridge">
+        <canvas class="food-ring-overlay" width="80" height="80"></canvas>
+        <div class="food-info">
+          <h4>Avena & Frutta Secca</h4>
+          <p>Energia complessa per allenamenti intensi</p>
+          <div class="food-macros">
+            <div class="macro"><span class="macro-value macro-carb">32%</span><span class="macro-label">Carb</span></div>
+            <div class="macro"><span class="macro-value macro-prot">29%</span><span class="macro-label">Prot</span></div>
+            <div class="macro"><span class="macro-value macro-fat">20%</span><span class="macro-label">Fat</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 8: TRAIETTORIE
+     ═══════════════════════════════════════════ -->
+<section id="traiettorie">
+  <div class="section-inner">
+    <div class="section-tag reveal">SCANSIONE TERRENO</div>
+    <h2 class="section-heading reveal reveal-delay-1">LINEA <span>IDEALE & APEX</span></h2>
+    <div class="trajectory-container">
+      <div class="trajectory-canvas-wrap reveal reveal-delay-2">
+        <canvas class="trajectory-canvas" id="trajCanvas"></canvas>
+      </div>
+      <div class="trajectory-info reveal reveal-delay-3">
+        <div class="traj-item traj-cyan">
+          <h4>Linea Geometrica Ideale</h4>
+          <p>Calcolo matematico della traiettoria ottimale che minimizza la distanza percorsa e massimizza la velocità di uscita dalla curva.</p>
+        </div>
+        <div class="traj-item traj-red">
+          <h4>Analisi Cambi Pendenza</h4>
+          <p>Drop e bumps vengono analizzati per calibrare la compressione del corpo e mantenere il contatto sci-neve.</p>
+        </div>
+        <div class="traj-item traj-cyan">
+          <h4>Valutazione Grip</h4>
+          <p>Il ghiaccio vivo richiede angolazioni aggressive della lamina per garantire aderenza nelle curve ad alta velocità.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 9: LAMINE
+     ═══════════════════════════════════════════ -->
+<section id="lamine">
+  <div class="section-inner">
+    <div class="section-tag reveal">MICRO GEOMETRIA</div>
+    <h2 class="section-heading reveal reveal-delay-1">ANGOLI DELLE <span>LAMINE</span></h2>
+    <div class="edge-split">
+      <div class="edge-visual reveal reveal-delay-2">
+        <canvas class="edge-canvas" id="edgeCanvas"></canvas>
+      </div>
+      <div class="edge-details reveal reveal-delay-3">
+        <div class="edge-spec">
+          <h4>Side Edge Bevel</h4>
+          <div class="angle">3°</div>
+          <p>Massima aggressività sul ghiaccio</p>
+        </div>
+        <div class="edge-spec">
+          <h4>Base Edge Bevel</h4>
+          <div class="angle">1.0° - 1.5°</div>
+          <p>Scorrevolezza e transizione fluida</p>
+        </div>
+        <div class="edge-spec">
+          <h4>Soletta — Stonegrind</h4>
+          <div class="angle" style="font-size:1.2rem;">Struttura lineare</div>
+          <p>Pattern per respingere l'attrito e canalizzare l'acqua di fusione</p>
+        </div>
+      </div>
+      <p class="edge-quote reveal">"L'attrito è il nemico. L'angolo è la salvezza."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 10: RECORD
+     ═══════════════════════════════════════════ -->
+<section id="record">
+  <div class="section-inner">
+    <div class="record-content">
+      <div class="section-tag reveal" style="color:#ff3c3c;">⚠ TELEMETRIA LIVE DEL RECORD</div>
+      <h2 class="section-heading reveal reveal-delay-1">IL RECORD <span style="color:#ff3c3c;">ASSOLUTO</span></h2>
+      <div class="record-gauge reveal reveal-delay-2">
+        <canvas id="gaugeCanvas" width="320" height="320"></canvas>
+        <div class="record-number">
+          <div class="speed" id="recordSpeed">0</div>
+          <div class="unit">KM/H</div>
+        </div>
+      </div>
+      <div class="record-details reveal reveal-delay-3">
+        <div class="record-detail">
+          <div class="val">Johan Clarey</div>
+          <div class="lbl">Atleta</div>
+        </div>
+        <div class="record-detail">
+          <div class="val">Wengen</div>
+          <div class="lbl">Località</div>
+        </div>
+        <div class="record-detail">
+          <div class="val">> Caduta Libera</div>
+          <div class="lbl">Confronto</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 11: STREIF
+     ═══════════════════════════════════════════ -->
+<section id="streif">
+  <div class="section-inner">
+    <div class="section-tag reveal">TERRENO LEGGENDARIO</div>
+    <h2 class="section-heading reveal reveal-delay-1">LA STREIF: <span>IL MITO ASSOLUTO</span></h2>
+    <div class="streif-grid">
+      <div class="streif-photo reveal reveal-delay-2">
+        <img src="https://images.unsplash.com/photo-1516475429286-465d18b10da2?w=800&q=80" alt="Streif">
+        <div class="photo-frame"></div>
+      </div>
+      <div class="streif-info reveal reveal-delay-3">
+        <div class="streif-title-badge">KITZBÜHEL · HAHNENKAMM</div>
+        <div class="streif-facts">
+          <div class="streif-fact cyan">
+            <div>
+              <h5>Mausefalle</h5>
+              <p>85% di pendenza immediata. Salti nel vuoto fino a 80 metri di lunghezza.</p>
+            </div>
+          </div>
+          <div class="streif-fact red">
+            <div>
+              <h5>Karussell</h5>
+              <p>3.1 G di compressione centrifuga estrema sul corpo dell'atleta.</p>
+            </div>
+          </div>
+          <div class="streif-fact cyan">
+            <div>
+              <h5>Steilhang</h5>
+              <p>Tratto al buio: gli atleti non vedono l'uscita della curva fino all'ultimo istante.</p>
+            </div>
+          </div>
+        </div>
+        <canvas class="streif-telemetry" id="streifTelemetry" width="600" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 12: CHIUSURA
+     ═══════════════════════════════════════════ -->
+<section id="chiusura">
+  <div class="section-inner">
+    <div class="chiusura-content">
+      <h2 class="reveal">
+        Istinto primordiale.<br>
+        Calcolo millimetrico.
+        <span class="reveal reveal-delay-1">Questa è la Discesa Libera.</span>
+      </h2>
+      <div class="chiusura-author reveal reveal-delay-2">RICCARDO STRIGIOTTI</div>
+      <div class="power-icon reveal reveal-delay-3" onclick="window.scrollTo({top:0,behavior:'smooth'})">⏻</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════ -->
+<script>
+// ─── INTERSECTION OBSERVER ───
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ─── NAV VISIBILITY ───
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('visible', window.scrollY > 300);
+
+  // Scroll progress
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = (window.scrollY / h) * 100;
+  document.getElementById('scrollProgress').style.width = pct + '%';
+
+  // Active nav link
+  const sections = document.querySelectorAll('section');
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 200) current = s.id;
+  });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+
+// ─── TOGGLE CARDS ───
+function toggleCard(el) { el.classList.toggle('expanded'); }
+function toggleEquip(el) {
+  document.querySelectorAll('.equip-item').forEach(e => { if (e !== el) e.classList.remove('active'); });
+  el.classList.toggle('active');
+}
+
+// ─── HERO SPEED COUNTER ───
+const heroObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    animateValue('heroSpeed', 0, 142, 2000);
+    animateValue('heroG', 0, 3.8, 2000, 1);
+  }
+}, { threshold: 0.5 });
+heroObs.observe(document.getElementById('hero'));
+
+function animateValue(id, start, end, dur, dec = 0) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const range = end - start;
+  const startTime = performance.now();
+  function step(ts) {
+    const p = Math.min((ts - startTime) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = (start + range * eased).toFixed(dec);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ─── ALTITUDE PROFILE CANVAS ───
+function drawAltitude() {
+  const canvas = document.getElementById('altitudeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+
+  // BG grid
+  ctx.strokeStyle = 'rgba(0,255,255,0.06)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  // Altitude profile
+  const points = [];
+  const segments = 80;
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const x = t * w * 0.85 + w * 0.1;
+    let y;
+    if (t < 0.05) y = h * 0.1;
+    else if (t < 0.15) y = h * 0.1 + (t - 0.05) / 0.1 * h * 0.15 + Math.sin(t * 30) * 5;
+    else if (t < 0.4) y = h * 0.25 + (t - 0.15) / 0.25 * h * 0.2 + Math.sin(t * 20) * 8;
+    else if (t < 0.7) y = h * 0.45 + (t - 0.4) / 0.3 * h * 0.25 + Math.sin(t * 15) * 10;
+    else y = h * 0.7 + (t - 0.7) / 0.3 * h * 0.15 + Math.sin(t * 25) * 5;
+    points.push({ x, y });
+  }
+
+  // Fill
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(255,60,60,0.4)');
+  grad.addColorStop(1, 'rgba(255,60,60,0.02)');
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, h);
+  points.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(points[points.length - 1].x, h);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = '#ff3c3c';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#00ffff';
+  ctx.font = '11px "JetBrains Mono", monospace';
+  ctx.fillText('START — 2850m', points[0].x - 10, points[0].y - 12);
+  ctx.fillText('FINISH — 1750m', points[points.length - 1].x - 50, points[points.length - 1].y - 12);
+
+  // Altitude axis
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = '9px "JetBrains Mono", monospace';
+  const altLabels = ['2800m', '2400m', '2000m', '1800m'];
+  altLabels.forEach((l, i) => ctx.fillText(l, 5, h * 0.15 + i * (h * 0.22)));
+}
+
+const altObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { drawAltitude(); altObs.unobserve(entries[0].target); }
+}, { threshold: 0.3 });
+const altCanvas = document.getElementById('altitudeCanvas');
+if (altCanvas) altObs.observe(altCanvas);
+
+// ─── WIND TUNNEL CANVAS ───
+function initWindTunnel() {
+  const canvas = document.getElementById('windCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+
+  const lines = [];
+  for (let i = 0; i < 40; i++) {
+    lines.push({
+      y: (i / 40) * h,
+      speed: 1 + Math.random() * 2,
+      offset: Math.random() * w,
+      color: i < 15 ? `hsla(${180 + i * 3}, 100%, 50%, 0.4)` :
+             i < 25 ? `hsla(${60 - (i - 15) * 6}, 100%, 50%, 0.5)` :
+                      `hsla(${200 + (i - 25) * 3}, 100%, 50%, 0.3)`
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    // Skier silhouette area
+    const cx = w * 0.35, cy = h * 0.5;
+    lines.forEach(l => {
+      l.offset += l.speed;
+      if (l.offset > w) l.offset = -50;
+      const dy = Math.abs(l.y - cy);
+      const deflect = dy < 80 ? (80 - dy) * 0.4 * (l.y < cy ? -1 : 1) : 0;
+      ctx.beginPath();
+      ctx.moveTo(l.offset, l.y);
+      ctx.quadraticCurveTo(cx, l.y + deflect, l.offset + 200, l.y + deflect * 0.5);
+      ctx.strokeStyle = l.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+    // Skier outline
+    ctx.font = '80px sans-serif';
+    ctx.fillStyle = 'rgba(0,255,255,0.15)';
+    ctx.fillText('⛷', cx - 30, cy + 30);
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+const windObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { initWindTunnel(); windObs.unobserve(entries[0].target); }
+}, { threshold: 0.3 });
+const windEl = document.getElementById('windTunnel');
+if (windEl) windObs.observe(windEl);
+
+// ─── TRAINING RING CANVAS ───
+function drawTrainingRing() {
+  const canvas = document.getElementById('ringCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 380 * dpr;
+  canvas.height = 380 * dpr;
+  ctx.scale(dpr, dpr);
+  const cx = 190, cy = 190;
+
+  const cats = [
+    { name: 'Forza', pct: 0.30, color: '#ff3c3c', start: 0 },
+    { name: 'Agility', pct: 0.25, color: '#00ffff', start: 0.30 },
+    { name: 'Resistenza', pct: 0.25, color: '#ffffff', start: 0.55 },
+    { name: 'Core', pct: 0.20, color: '#888888', start: 0.80 }
+  ];
+
+  // Outer ring
+  cats.forEach(c => {
+    const startAngle = c.start * Math.PI * 2 - Math.PI / 2;
+    const endAngle = (c.start + c.pct) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 160, startAngle, endAngle);
+    ctx.lineWidth = 35;
+    ctx.strokeStyle = c.color;
+    ctx.lineCap = 'butt';
+    ctx.stroke();
+
+    // Gap
+    ctx.beginPath();
+    ctx.arc(cx, cy, 160, endAngle - 0.02, endAngle + 0.02);
+    ctx.lineWidth = 37;
+    ctx.strokeStyle = '#0a1628';
+    ctx.stroke();
+  });
+
+  // Inner ring (same but smaller, slightly transparent)
+  cats.forEach(c => {
+    const startAngle = c.start * Math.PI * 2 - Math.PI / 2;
+    const endAngle = (c.start + c.pct) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 115, startAngle, endAngle);
+    ctx.lineWidth = 25;
+    ctx.strokeStyle = c.color + '66';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 115, endAngle - 0.02, endAngle + 0.02);
+    ctx.lineWidth = 27;
+    ctx.strokeStyle = '#0a1628';
+    ctx.stroke();
+  });
+
+  // Center
+  ctx.fillStyle = '#0a1628';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(0,255,255,0.1)';
+  ctx.strokeStyle = 'rgba(0,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Center text
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 14px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Carico', cx, cy - 15);
+  ctx.fillText('Settimanale', cx, cy + 3);
+  ctx.fillStyle = '#00ffff';
+  ctx.font = 'bold 12px "JetBrains Mono", monospace';
+  ctx.fillText('10-14 Sessioni', cx, cy + 25);
+}
+const ringObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { drawTrainingRing(); ringObs.unobserve(entries[0].target); }
+}, { threshold: 0.3 });
+const ringEl = document.getElementById('ringCanvas');
+if (ringEl) ringObs.observe(ringEl);
+
+// ─── TRAJECTORY CANVAS ───
+function drawTrajectory() {
+  const canvas = document.getElementById('trajCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 450 * dpr;
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = 450;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,255,255,0.05)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 30) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  // Mountain background
+  ctx.fillStyle = 'rgba(0,255,255,0.03)';
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  ctx.lineTo(w * 0.2, h * 0.2);
+  ctx.lineTo(w * 0.4, h * 0.35);
+  ctx.lineTo(w * 0.6, h * 0.15);
+  ctx.lineTo(w * 0.8, h * 0.3);
+  ctx.lineTo(w, h * 0.1);
+  ctx.lineTo(w, h);
+  ctx.fill();
+
+  // Ideal line (cyan)
+  ctx.beginPath();
+  ctx.moveTo(w * 0.5, h * 0.05);
+  ctx.bezierCurveTo(w * 0.45, h * 0.3, w * 0.55, h * 0.5, w * 0.35, h * 0.7);
+  ctx.bezierCurveTo(w * 0.25, h * 0.8, w * 0.4, h * 0.9, w * 0.5, h * 0.95);
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  // Alternative line (red, slightly worse)
+  ctx.beginPath();
+  ctx.moveTo(w * 0.5, h * 0.05);
+  ctx.bezierCurveTo(w * 0.55, h * 0.25, w * 0.65, h * 0.45, w * 0.4, h * 0.65);
+  ctx.bezierCurveTo(w * 0.2, h * 0.75, w * 0.35, h * 0.85, w * 0.5, h * 0.95);
+  ctx.strokeStyle = '#ff3c3c';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // APEX marker
+  const apexX = w * 0.38, apexY = h * 0.58;
+  ctx.beginPath();
+  ctx.arc(apexX, apexY, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#00ffff';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,255,255,0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(apexX, apexY, 15, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // APEX label
+  ctx.fillStyle = '#00ffff';
+  ctx.font = 'bold 13px "JetBrains Mono", monospace';
+  ctx.fillText('APEX', apexX + 20, apexY - 5);
+
+  // Dashed vertical line at apex
+  ctx.beginPath();
+  ctx.moveTo(apexX, apexY - 40);
+  ctx.lineTo(apexX, apexY + 40);
+  ctx.strokeStyle = 'rgba(0,255,255,0.3)';
+  ctx.setLineDash([3, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Legend
+  ctx.fillStyle = '#00ffff';
+  ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.fillText('━ Linea ideale', 15, h - 30);
+  ctx.fillStyle = '#ff3c3c';
+  ctx.fillText('╶╶ Linea sub-ottimale', 15, h - 12);
+}
+const trajObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { drawTrajectory(); trajObs.unobserve(entries[0].target); }
+}, { threshold: 0.3 });
+const trajEl = document.getElementById('trajCanvas');
+if (trajEl) trajObs.observe(trajEl);
+
+// ─── EDGE BEVEL CANVAS ───
+function drawEdge() {
+  const canvas = document.getElementById('edgeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,255,255,0.04)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 25) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 25) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  // Ski cross-section
+  const sx = w * 0.4, sy = h * 0.5;
+  // Base (horizontal)
+  ctx.beginPath();
+  ctx.moveTo(sx - 80, sy);
+  ctx.lineTo(sx + 80, sy);
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Side edge (3°)
+  const sideAngle = 3 * Math.PI / 180;
+  ctx.beginPath();
+  ctx.moveTo(sx + 80, sy);
+  ctx.lineTo(sx + 80 + Math.cos(Math.PI / 2 + sideAngle) * 60, sy + Math.sin(Math.PI / 2 + sideAngle) * 60);
+  ctx.strokeStyle = '#ff3c3c';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Base edge (1°)
+  const baseAngle = 1 * Math.PI / 180;
+  ctx.beginPath();
+  ctx.moveTo(sx - 80, sy);
+  ctx.lineTo(sx - 80 - 60, sy + Math.sin(baseAngle) * 60);
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Angle arc (3°)
+  ctx.beginPath();
+  ctx.arc(sx + 80, sy, 40, -Math.PI / 2, -Math.PI / 2 + sideAngle * 8);
+  ctx.strokeStyle = '#ff3c3c';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Angle arc (1°)
+  ctx.beginPath();
+  ctx.arc(sx - 80, sy, 35, -Math.PI / 2, -Math.PI / 2 + baseAngle * 20);
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#00ffff';
+  ctx.font = 'bold 22px "JetBrains Mono", monospace';
+  ctx.fillText('3°', sx + 130, sy - 20);
+  ctx.fillText('1.0°', sx - 160, sy + 40);
+
+  ctx.fillStyle = '#7a8fa5';
+  ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.fillText('SIDE EDGE', sx + 125, sy);
+  ctx.fillText('BASE EDGE', sx - 165, sy + 58);
+
+  // Snow crystals (decorative)
+  ctx.fillStyle = 'rgba(0,255,255,0.08)';
+  for (let i = 0; i < 15; i++) {
+    ctx.beginPath();
+    ctx.arc(Math.random() * w, Math.random() * h, 2 + Math.random() * 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+const edgeObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { drawEdge(); edgeObs.unobserve(entries[0].target); }
+}, { threshold: 0.3 });
+const edgeEl = document.getElementById('edgeCanvas');
+if (edgeEl) edgeObs.observe(edgeEl);
+
+// ─── RECORD GAUGE CANVAS ───
+function drawGauge() {
+  const canvas = document.getElementById('gaugeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 160, cy = 160, r = 140;
+
+  // Outer ring (cyan)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(0,255,255,0.3)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Red arc (represents speed)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 10, -Math.PI * 0.75, Math.PI * 0.75);
+  ctx.strokeStyle = '#ff3c3c';
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Tick marks
+  for (let i = 0; i < 40; i++) {
+    const angle = -Math.PI * 0.75 + (i / 39) * Math.PI * 1.5;
+    const inner = i % 5 === 0 ? r - 28 : r - 22;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner);
+    ctx.lineTo(cx + Math.cos(angle) * (r - 18), cy + Math.sin(angle) * (r - 18));
+    ctx.strokeStyle = i % 5 === 0 ? '#ff3c3c' : 'rgba(255,60,60,0.3)';
+    ctx.lineWidth = i % 5 === 0 ? 2 : 1;
+    ctx.stroke();
+  }
+
+  // Inner cyan ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 35, -Math.PI * 0.5, Math.PI * 1.5);
+  ctx.strokeStyle = 'rgba(0,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Animate speed
+  animateValue('recordSpeed', 0, 161.9, 2500, 1);
+}
+const gaugeObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { drawGauge(); gaugeObs.unobserve(entries[0].target); }
+}, { threshold: 0.5 });
+const gaugeEl = document.getElementById('gaugeCanvas');
+if (gaugeEl) gaugeObs.observe(gaugeEl);
+
+// ─── STREIF TELEMETRY CANVAS ───
+function drawStreifTelemetry() {
+  const canvas = document.getElementById('streifTelemetry');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,255,255,0.05)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 30) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  // Generate telemetry-like data
+  function genData(segments, amplitude, offset) {
+    const pts = [];
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      pts.push({
+        x: t * w,
+        y: h * 0.5 + Math.sin(t * 12) * amplitude + Math.sin(t * 25) * (amplitude * 0.4) +
+           Math.cos(t * 7) * (amplitude * 0.3) + offset
+      });
+    }
+    return pts;
+  }
+
+  // Speed line (cyan)
+  const speedPts = genData(100, h * 0.25, -10);
+  ctx.beginPath();
+  speedPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // G-force line (red)
+  const gPts = genData(100, h * 0.2, 10);
+  ctx.beginPath();
+  gPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = '#ff3c3c';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#00ffff';
+  ctx.font = '9px "JetBrains Mono", monospace';
+  ctx.fillText('━ Velocità', 10, 15);
+  ctx.fillStyle = '#ff3c3c';
+  ctx.fillText('━ Forza G', 100, 15);
+}
+const streifTelObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { drawStreifTelemetry(); streifTelObs.unobserve(entries[0].target); }
+}, { threshold: 0.3 });
+const streifTelEl = document.getElementById('streifTelemetry');
+if (streifTelEl) streifTelObs.observe(streifTelEl);
+
+// ─── FOOD RING OVERLAYS ───
+function drawFoodRings() {
+  document.querySelectorAll('.food-ring-overlay').forEach((canvas, i) => {
+    const ctx = canvas.getContext('2d');
+    const macros = [
+      [0.77, 0.40, 0.21],
+      [0.30, 0.58, 0.12],
+      [0.32, 0.29, 0.20]
+    ][i] || [0.5, 0.3, 0.2];
+    const colors = ['#ff3c3c', '#00ffff', '#ffc800'];
+    const cx = 40, cy = 40, r = 30;
+    macros.forEach((pct, j) => {
+      const startA = -Math.PI / 2;
+      const endA = startA + pct * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - j * 10, startA, endA);
+      ctx.strokeStyle = colors[j];
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    });
+  });
+}
+setTimeout(drawFoodRings, 1000);
+
+// ─── TOOLTIP ON ALTITUDE CANVAS ───
+const altCanvasEl = document.getElementById('altitudeCanvas');
+if (altCanvasEl) {
+  altCanvasEl.addEventListener('mousemove', (e) => {
+    const rect = altCanvasEl.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = x / rect.width;
+    const alt = Math.round(2850 - pct * 1100);
+    const speed = Math.round(60 + pct * 100);
+    altCanvasEl.title = `Altitudine: ${alt}m | Velocità stimata: ${speed} km/h`;
+  });
+}
+
+// ─── RESIZE HANDLER ───
+window.addEventListener('resize', () => {
+  drawAltitude();
+});
+</script>
+
+</body>
+</html>
