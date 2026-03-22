@@ -153,8 +153,7 @@ section {
 #hero {
   min-height: 100vh;
   background:
-    linear-gradient(135deg, rgba(10,22,40,0.92) 0%, rgba(10,22,40,0.6) 50%, rgba(10,22,40,0.85) 100%),
-    url('https://images.unsplash.com/photo-1565992441121-4367c2967103?w=1600&q=80') center/cover;
+    linear-gradient(135deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%);
   overflow: hidden;
 }
 .hero-content {
@@ -243,6 +242,12 @@ section {
    ═══════════════════════════════════════════════ */
 #anatomia {
   background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 100%);
+}
+.anatomy-hero-img {
+  width: 100%;
+  border: 1px solid rgba(0,255,255,0.15);
+  margin-bottom: 2rem;
+  opacity: 0.9;
 }
 .anatomy-grid {
   display: grid;
@@ -744,9 +749,7 @@ section {
    SECTION 10: RECORD
    ═══════════════════════════════════════════════ */
 #record {
-  background:
-    linear-gradient(135deg, rgba(10,18,37,0.95), rgba(10,22,40,0.9)),
-    url('https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=1600&q=80') center/cover;
+  background: linear-gradient(135deg, #0a1225, #0d1f3c);
 }
 .record-content {
   text-align: center;
@@ -867,9 +870,7 @@ section {
    SECTION 12: CHIUSURA
    ═══════════════════════════════════════════════ */
 #chiusura {
-  background:
-    linear-gradient(180deg, rgba(10,22,40,0.3), rgba(255,255,255,0.95) 40%),
-    url('https://images.unsplash.com/photo-1478700485868-5e0e5032b970?w=1600&q=80') center/cover;
+  background: url('img/slide-022.jpg') center/cover;
   min-height: 80vh;
 }
 .chiusura-content {
@@ -1003,15 +1004,7 @@ section {
       <a href="#anatomia" class="hero-cta reveal reveal-delay-2">[›] INIZIA LA DISCESA</a>
     </div>
     <div class="hero-visual reveal reveal-delay-2">
-      <div class="hero-hud">
-        <div class="hud-circle hud-circle-1"></div>
-        <div class="hud-circle hud-circle-2"></div>
-        <div class="hud-circle hud-circle-3"></div>
-        <div class="hud-data hud-data-speed">SPEED: <span id="heroSpeed">0</span> KM/H</div>
-        <div class="hud-data hud-data-alt">ALT: 2850M</div>
-        <div class="hud-data hud-data-gforce">G-FORCE: <span id="heroG">0.0</span>G</div>
-        <div class="hero-skier-icon">⛷</div>
-      </div>
+      <img src="img/slide-000.jpg" alt="Pura Gravità" style="width:100%;max-width:520px;border:1px solid rgba(0,255,255,0.2);box-shadow:0 0 60px rgba(0,255,255,0.15);">
     </div>
   </div>
 </section>
@@ -1023,6 +1016,7 @@ section {
   <div class="section-inner">
     <div class="section-tag reveal">ANALISI COMPONENTI</div>
     <h2 class="section-heading reveal reveal-delay-1">ANATOMIA DELLA <span>VELOCITÀ</span></h2>
+    <img src="img/slide-002.jpg" alt="Anatomia della Velocità" class="anatomy-hero-img reveal reveal-delay-1">
     <div class="anatomy-grid">
       <div class="anatomy-card reveal reveal-delay-1" onclick="toggleCard(this)">
         <div class="arrow-icon arrow-side">⚡</div>
@@ -1060,7 +1054,7 @@ section {
     <div class="section-tag reveal">ANALISI TRACCIATO</div>
     <h2 class="section-heading reveal reveal-delay-1">PROFILO <span>ALTIMETRICO</span></h2>
     <div class="altitude-container reveal reveal-delay-2">
-      <canvas class="altitude-canvas" id="altitudeCanvas"></canvas>
+      <img src="img/slide-004.jpg" alt="Profilo Altimetrico" style="width:100%;border:1px solid rgba(0,255,255,0.15);">
       <div class="altitude-info-cards">
         <div class="alt-info-card">
           <div class="value">800-1100m</div>
@@ -1087,8 +1081,8 @@ section {
     <div class="section-tag reveal">GALLERIA DEL VENTO</div>
     <h2 class="section-heading reveal reveal-delay-1">DRAG <span>AERODINAMICO</span></h2>
     <div class="aero-split">
-      <div class="aero-visual reveal reveal-delay-2" id="windTunnel">
-        <canvas id="windCanvas" style="width:100%;height:100%;"></canvas>
+      <div class="aero-visual reveal reveal-delay-2" id="windTunnel" style="height:auto;border:none;">
+        <img src="img/slide-006.jpg" alt="Galleria del Vento - Aerodinamica" style="width:100%;display:block;border:1px solid rgba(0,255,255,0.15);">
       </div>
       <div class="aero-stats reveal reveal-delay-3">
         <div class="aero-stat">
@@ -1119,8 +1113,8 @@ section {
     <div class="section-tag reveal">ANALISI TECNICA</div>
     <h2 class="section-heading reveal reveal-delay-1">EQUIPAGGIAMENTO <span>DA GARA</span></h2>
     <div class="equip-grid">
-      <div class="equip-model reveal reveal-delay-2">
-        <div class="wireframe-skier">⛷</div>
+      <div class="equip-model reveal reveal-delay-2" style="padding:0;background:none;border:none;">
+        <img src="img/slide-008.jpg" alt="Equipaggiamento Wireframe" style="width:100%;height:100%;object-fit:cover;border:1px solid rgba(0,255,255,0.15);">
       </div>
       <div class="equip-items reveal reveal-delay-3">
         <div class="equip-item" onclick="toggleEquip(this)">
@@ -1177,7 +1171,7 @@ section {
     <h2 class="section-heading reveal reveal-delay-1">CARICO <span>SETTIMANALE</span></h2>
     <div class="training-ring-container">
       <div class="ring-canvas-wrap reveal reveal-delay-2">
-        <canvas class="ring-canvas" id="ringCanvas"></canvas>
+        <img src="img/slide-010.jpg" alt="Carico Settimanale" style="width:100%;max-width:500px;border:1px solid rgba(0,255,255,0.15);">
       </div>
       <div class="training-details reveal reveal-delay-3">
         <div class="training-center-text">
@@ -1225,11 +1219,12 @@ section {
   <div class="section-inner">
     <div class="section-tag reveal">FUEL SYSTEM</div>
     <h2 class="section-heading reveal reveal-delay-1">NUTRIZIONE <span>DA GARA</span></h2>
-    <div class="food-grid">
-      <div class="food-card reveal reveal-delay-1">
-        <img class="food-img" src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80" alt="Omelette">
-        <canvas class="food-ring-overlay" width="80" height="80"></canvas>
-        <div class="food-info">
+    <div class="reveal reveal-delay-1" style="margin-top:2rem;">
+      <img src="img/slide-012.jpg" alt="Nutrizione da Gara" style="width:100%;border:1px solid rgba(0,255,255,0.15);">
+    </div>
+    <div class="food-grid" style="margin-top:1.5rem;">
+      <div class="food-card reveal reveal-delay-2" style="background:rgba(0,255,255,0.03);border:1px solid rgba(0,255,255,0.1);padding:1.2rem;">
+        <div class="food-info" style="padding:0;">
           <h4>Omelette Proteica</h4>
           <p>Proteine pure per forza esplosiva e recupero muscolare</p>
           <div class="food-macros">
@@ -1239,10 +1234,8 @@ section {
           </div>
         </div>
       </div>
-      <div class="food-card reveal reveal-delay-2">
-        <img class="food-img" src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=80" alt="Pancake">
-        <canvas class="food-ring-overlay" width="80" height="80"></canvas>
-        <div class="food-info">
+      <div class="food-card reveal reveal-delay-3" style="background:rgba(0,255,255,0.03);border:1px solid rgba(0,255,255,0.1);padding:1.2rem;">
+        <div class="food-info" style="padding:0;">
           <h4>Pancake & Frutti di Bosco</h4>
           <p>Carboidrati a lento rilascio per energia sostenuta</p>
           <div class="food-macros">
@@ -1252,10 +1245,8 @@ section {
           </div>
         </div>
       </div>
-      <div class="food-card reveal reveal-delay-3">
-        <img class="food-img" src="https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=600&q=80" alt="Porridge">
-        <canvas class="food-ring-overlay" width="80" height="80"></canvas>
-        <div class="food-info">
+      <div class="food-card reveal reveal-delay-4" style="background:rgba(0,255,255,0.03);border:1px solid rgba(0,255,255,0.1);padding:1.2rem;">
+        <div class="food-info" style="padding:0;">
           <h4>Avena & Frutta Secca</h4>
           <p>Energia complessa per allenamenti intensi</p>
           <div class="food-macros">
@@ -1278,7 +1269,7 @@ section {
     <h2 class="section-heading reveal reveal-delay-1">LINEA <span>IDEALE & APEX</span></h2>
     <div class="trajectory-container">
       <div class="trajectory-canvas-wrap reveal reveal-delay-2">
-        <canvas class="trajectory-canvas" id="trajCanvas"></canvas>
+        <img src="img/slide-014.jpg" alt="Traiettoria Ideale e Apex" style="width:100%;display:block;">
       </div>
       <div class="trajectory-info reveal reveal-delay-3">
         <div class="traj-item traj-cyan">
@@ -1306,8 +1297,8 @@ section {
     <div class="section-tag reveal">MICRO GEOMETRIA</div>
     <h2 class="section-heading reveal reveal-delay-1">ANGOLI DELLE <span>LAMINE</span></h2>
     <div class="edge-split">
-      <div class="edge-visual reveal reveal-delay-2">
-        <canvas class="edge-canvas" id="edgeCanvas"></canvas>
+      <div class="edge-visual reveal reveal-delay-2" style="height:auto;">
+        <img src="img/slide-016.jpg" alt="Angoli Lamine" style="width:100%;display:block;">
       </div>
       <div class="edge-details reveal reveal-delay-3">
         <div class="edge-spec">
@@ -1339,12 +1330,8 @@ section {
     <div class="record-content">
       <div class="section-tag reveal" style="color:#ff3c3c;">⚠ TELEMETRIA LIVE DEL RECORD</div>
       <h2 class="section-heading reveal reveal-delay-1">IL RECORD <span style="color:#ff3c3c;">ASSOLUTO</span></h2>
-      <div class="record-gauge reveal reveal-delay-2">
-        <canvas id="gaugeCanvas" width="320" height="320"></canvas>
-        <div class="record-number">
-          <div class="speed" id="recordSpeed">0</div>
-          <div class="unit">KM/H</div>
-        </div>
+      <div class="record-gauge reveal reveal-delay-2" style="width:100%;max-width:700px;height:auto;">
+        <img src="img/slide-018.jpg" alt="Record 161.9 km/h" style="width:100%;border:1px solid rgba(0,255,255,0.15);box-shadow:0 0 50px rgba(255,60,60,0.2);">
       </div>
       <div class="record-details reveal reveal-delay-3">
         <div class="record-detail">
@@ -1373,7 +1360,7 @@ section {
     <h2 class="section-heading reveal reveal-delay-1">LA STREIF: <span>IL MITO ASSOLUTO</span></h2>
     <div class="streif-grid">
       <div class="streif-photo reveal reveal-delay-2">
-        <img src="https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=800&q=80" alt="Streif Kitzbühel">
+        <img src="img/slide-020.jpg" alt="La Streif - Kitzbühel" style="height:auto;">
         <div class="photo-frame"></div>
       </div>
       <div class="streif-info reveal reveal-delay-3">
